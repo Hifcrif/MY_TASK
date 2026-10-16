@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Schedule</title>
+<style>
+  :root {
+    --page: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --navy: #0f172a; --slate: #334155; --accent: #2563eb; --danger: #e11d48; --ok: #059669;
+    --main: #1e3a8a; --study: #0d9488; --special: #6d28d9; --break: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Noto Sans Thai", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+         background: var(--page); color: var(--text); }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; display: flex; flex-direction: column; }
+
+  /* Header banner */
+  .banner { background: var(--navy); color: #fff; text-align: center; padding: 26px 16px; border-radius: 24px; margin-bottom: 20px; }
+  .banner h1 { margin: 0 0 6px; font-size: 1.7rem; letter-spacing: .2px; }
+  .banner p { margin: 0; color: #94a3b8; font-size: .95rem; }
+
+  h2 { font-size: 1.15rem; margin: 8px 0 12px; }
+  .sechead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .sechead h2 { margin: 8px 0; }
+  .sechead button { padding: 9px 16px; }
+  #schedules { order: 1; margin-bottom: 24px; }
+  #tasks { order: 2; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+  form { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  form.three { grid-template-columns: repeat(3, 1fr); }
+  form .full { grid-column: 1 / -1; }
+  form .span2 { grid-column: span 2; }
+  label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 4px; font-weight: 600; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px;
+         background: #f8fafc; color: var(--text); font: inherit; }
+  input:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent); border-color: var(--accent); }
+  button.primary { background: var(--navy); color: #fff; border: 0; padding: 11px 18px; border-radius: 10px; cursor: pointer; font: inherit; font-weight: 600; }
+  button.primary:hover { background: var(--slate); }
+
+  /* Tasks */
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .item:last-child { border-bottom: 0; }
+  .item .body { flex: 1; min-width: 0; }
+  .item .title { font-weight: 600; word-break: break-word; }
+  .item .meta { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+  .done .title { text-decoration: line-through; color: var(--muted); }
+  .badge { font-size: .7rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); margin-left: 6px; font-weight: 600; }
+  .badge.high { color: var(--danger); border-color: var(--danger); }
+  .badge.medium { color: #d97706; border-color: #d97706; }
+  .badge.low { color: var(--ok); border-color: var(--ok); }
+  .del { background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; }
+  .empty { color: var(--muted); text-align: center; padding: 20px 0; }
+  .filters { display: flex; gap: 8px; margin-bottom: 8px; }
+  .filters button { background: #f1f5f9; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 99px; cursor: pointer; font-weight: 600; }
+  .filters button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .overdue { color: var(--danger); }
+
+  /* Weekly timetable */
+  .gridscroll { overflow-x: auto; padding-bottom: 4px; }
+  .timetable { display: grid; gap: 8px; min-width: 860px; }
+  .th { padding: 12px 6px; text-align: center; font-weight: 700; font-size: .95rem; line-height: 1.3; color: #fff;
+        border-radius: 12px; }
+  .th.today { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px currentColor; }
+  .th.time { background: var(--slate); }
+  .timecol, .daycol { position: relative; }
+  .tcell { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center;
+           background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 12px; font-weight: 700; font-size: .85rem; color: var(--slate); }
+  .hcell { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center;
+           background: #fff; border: 1px solid var(--border); border-radius: 12px; color: #cbd5e1; font-size: .8rem; }
+  .daycol.today .hcell { background: #eff6ff; }
+  .block { position: absolute; border-radius: 12px; padding: 6px 8px; color: #fff; font-size: .78rem; line-height: 1.3;
+           overflow: hidden; text-align: center; display: flex; flex-direction: column; justify-content: center;
+           border: 1px solid rgba(0,0,0,.18); box-shadow: 0 1px 3px rgba(15,23,42,.18); }
+  .block b { display: block; font-size: .86rem; }
+  .block small { display: block; opacity: .85; font-size: .74rem; }
+  .block small.tk { margin-top: 2px; font-weight: 600; opacity: 1; }
+  .tasklink { color: var(--accent); }
+  .block.cat-break { color: var(--slate); border-color: #cbd5e1; box-shadow: none; }
+  .block .x { position: absolute; top: 3px; right: 6px; background: none; border: 0; color: inherit;
+              opacity: .6; font-size: .85rem; padding: 0; cursor: pointer; }
+  .block .x:hover { opacity: 1; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 16px; font-weight: 600; font-size: .9rem; }
+  .legend span { display: inline-flex; align-items: center; gap: 10px; }
+  .legend i { width: 44px; height: 24px; border-radius: 7px; display: inline-block; border: 1px solid rgba(0,0,0,.12); }
+  .hint { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+
+  @media (max-width: 640px) { form, form.three { grid-template-columns: 1fr; } form .span2 { grid-column: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="banner">
+    <h1>Weekly Schedule &amp; Tasks</h1>
+    <p>Classes, study sessions and to-dos in one place (Monday – Sunday)</p>
+  </header>
+
+  <!-- TASKS -->
+  <section id="tasks">
+    <h2>✅ Tasks</h2>
+    <div class="card">
+      <form id="taskForm">
+        <div class="full"><label>Task</label><input id="tTitle" required placeholder="What needs to be done?"></div>
+        <div><label>Due date</label><input id="tDue" type="date"></div>
+        <div><label>Priority</label>
+          <select id="tPrio"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></div>
+        <div class="full"><button class="primary" type="submit">+ Add task</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="filters" id="taskFilters">
+        <button data-f="all" class="active">All</button>
+        <button data-f="open">Open</button>
+        <button data-f="done">Done</button>
+      </div>
+      <div id="taskList"></div>
+    </div>
+  </section>
+
+  <!-- SCHEDULES -->
+  <section id="schedules">
+    <div class="sechead">
+      <h2>🗓️ Weekly schedule</h2>
+      <button class="primary" type="button" id="dlBtn" onclick="downloadPNG()">⬇ Download PNG</button>
+    </div>
+    <div class="card">
+      <form id="schForm" class="three">
+        <div class="full"><label>Class / activity</label><input id="sTitle" required placeholder="e.g. Math, Python practice, Lunch"></div>
+        <div><label>Day</label>
+          <select id="sDay">
+            <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+            <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+          </select></div>
+        <div><label>Start time</label><input id="sStart" type="time" required value="09:00"></div>
+        <div><label>End time</label><input id="sEnd" type="time" required value="10:00"></div>
+        <div><label>Type</label>
+          <select id="sCat">
+            <option value="main">Main class</option>
+            <option value="study">Study / Project</option>
+            <option value="special">Special class</option>
+            <option value="break">Break / Meal</option>
+          </select></div>
+        <div class="span2"><label>Link a task (optional)</label>
+          <select id="sTask"><option value="">— none —</option></select></div>
+        <div class="full"><label>Room / notes (optional)</label><input id="sNotes" placeholder="Room 204, Teacher name..."></div>
+        <div class="full"><button class="primary" type="submit">+ Add to weekly schedule</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="gridscroll"><div id="timetable"></div></div>
+      <div class="legend">
+        <span><i style="background:var(--main)"></i>Main class</span>
+        <span><i style="background:var(--study)"></i>Study / Project</span>
+        <span><i style="background:var(--special)"></i>Special class</span>
+        <span><i style="background:var(--break)"></i>Break / Meal</span>
+      </div>
+      <div class="hint">Repeats every week. Use ✕ on a block to remove it.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const KEY = "schedule-app-v1";
+const DAYS = [
+  ["Monday", "MON", "#2563eb"], ["Tuesday", "TUE", "#7c3aed"], ["Wednesday", "WED", "#059669"],
+  ["Thursday", "THU", "#d97706"], ["Friday", "FRI", "#0891b2"], ["Saturday", "SAT", "#4f46e5"], ["Sunday", "SUN", "#e11d48"]
+];
+const CAT_COLORS = { main: "#1e3a8a", study: "#0d9488", special: "#6d28d9", break: "#e2e8f0" };
+const ROW_H = 58; // px per hour
+let state = load();
+let taskFilter = "all";
+
+function load() {
+  let s;
+  try { s = JSON.parse(localStorage.getItem(KEY)) || { tasks: [], schedules: [] }; }
+  catch { s = { tasks: [], schedules: [] }; }
+  s.schedules = (s.schedules || []).map(x => {
+    if (x.day === undefined && x.date) x.day = (new Date(x.date + "T00:00").getDay() + 6) % 7;
+    if (!x.end) x.end = addMinutes(x.start, 60);
+    if (!x.cat) x.cat = "main";
+    return x;
+  });
+  return s;
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtDate = d => new Date(d + "T00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", year: "numeric" });
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const pad = n => String(n).padStart(2, "0");
+const addMinutes = (t, add) => { const m = Math.min(toMin(t) + add, 24 * 60 - 1); return pad(Math.floor(m / 60)) + ":" + pad(m % 60); };
+const todayIdx = () => (new Date().getDay() + 6) % 7;
+
+// Tasks
+$("taskForm").onsubmit = e => {
+  e.preventDefault();
+  state.tasks.push({ id: uid(), title: $("tTitle").value.trim(), due: $("tDue").value, prio: $("tPrio").value, done: false });
+  save(); e.target.reset(); render();
+};
+document.querySelectorAll("#taskFilters button").forEach(b => b.onclick = () => {
+  taskFilter = b.dataset.f;
+  document.querySelectorAll("#taskFilters button").forEach(x => x.classList.toggle("active", x === b));
+  renderTasks();
+});
+function renderTasks() {
+  const list = state.tasks.filter(t => taskFilter === "all" || (taskFilter === "done") === t.done)
+    .sort((a, b) => a.done - b.done || (a.due || "9999").localeCompare(b.due || "9999"));
+  $("taskList").innerHTML = list.length ? list.map(t => `
+    <div class="item ${t.done ? "done" : ""}">
+      <input type="checkbox" style="width:auto;margin-top:4px" ${t.done ? "checked" : ""} onchange="toggleTask('${t.id}')">
+      <div class="body">
+        <div class="title">${esc(t.title)}<span class="badge ${t.prio}">${t.prio}</span></div>
+        <div class="meta ${!t.done && t.due && t.due < today() ? "overdue" : ""}">${t.due ? "Due " + fmtDate(t.due) : "No due date"}</div>
+        ${linkedInfo(t)}
+      </div>
+      <button class="del" title="Delete" onclick="delTask('${t.id}')">✕</button>
+    </div>`).join("") : `<div class="empty">No tasks yet</div>`;
+  // keep the "link a task" dropdown in the schedule form up to date
+  const cur = $("sTask").value;
+  $("sTask").innerHTML = `<option value="">— none —</option>` +
+    state.tasks.filter(t => !t.done).map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join("");
+  $("sTask").value = state.tasks.some(t => t.id === cur && !t.done) ? cur : "";
+}
+function linkedInfo(t) {
+  const sch = state.schedules.filter(s => s.taskId === t.id).sort((a, b) => a.day - b.day || a.start.localeCompare(b.start));
+  if (!sch.length) return "";
+  return `<div class="meta tasklink">🔗 ${sch.map(s => `${DAYS[s.day][1]} ${esc(s.start)}-${esc(s.end)} (${esc(s.title)})`).join(", ")}</div>`;
+}
+function toggleTask(id) { const t = state.tasks.find(t => t.id === id); t.done = !t.done; save(); render(); }
+function delTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  state.schedules.forEach(s => { if (s.taskId === id) s.taskId = ""; });
+  save(); render();
+}
+
+// Weekly schedule
+$("schForm").onsubmit = e => {
+  e.preventDefault();
+  const start = $("sStart").value, end = $("sEnd").value;
+  if (toMin(end) <= toMin(start)) { alert("End time must be after start time."); return; }
+  state.schedules.push({ id: uid(), title: $("sTitle").value.trim(), day: Number($("sDay").value),
+    start, end, cat: $("sCat").value, notes: $("sNotes").value.trim(), taskId: $("sTask").value });
+  save();
+  $("sTitle").value = ""; $("sNotes").value = ""; $("sTask").value = "";
+  render();
+};
+// picking a task fills the title if it is still empty
+$("sTask").onchange = () => {
+  const t = state.tasks.find(t => t.id === $("sTask").value);
+  if (t && !$("sTitle").value.trim()) $("sTitle").value = t.title;
+};
+
+function renderTimetable() {
+  const el = $("timetable");
+  const list = state.schedules;
+  const numDays = list.some(s => s.day >= 5) ? 7 : 5;
+
+  let startH = 8, endH = 18;
+  if (list.length) {
+    startH = Math.min(8, Math.floor(Math.min(...list.map(s => toMin(s.start))) / 60));
+    endH = Math.max(18, Math.ceil(Math.max(...list.map(s => toMin(s.end))) / 60));
+  }
+  const totalH = (endH - startH) * ROW_H;
+
+  el.className = "timetable";
+  el.style.gridTemplateColumns = `110px repeat(${numDays}, minmax(0, 1fr))`;
+
+  let html = `<div class="th time">Time</div>`;
+  for (let d = 0; d < numDays; d++) {
+    const [full, short, color] = DAYS[d];
+    html += `<div class="th ${d === todayIdx() ? "today" : ""}" style="background:${color};color:#fff"><span style="color:#fff">${full}<br>(${short})</span></div>`;
+  }
+
+  let tcells = "";
+  for (let h = startH; h < endH; h++) {
+    tcells += `<div class="tcell" style="top:${(h - startH) * ROW_H + 2}px;height:${ROW_H - 4}px">${pad(h)}:00 - ${pad(h + 1)}:00</div>`;
+  }
+  html += `<div class="timecol" style="height:${totalH}px">${tcells}</div>`;
+
+  for (let d = 0; d < numDays; d++) {
+    let hcells = "";
+    for (let h = startH; h < endH; h++) {
+      hcells += `<div class="hcell" style="top:${(h - startH) * ROW_H + 2}px;height:${ROW_H - 4}px">-</div>`;
+    }
+    const items = list.filter(s => s.day === d).sort((a, b) => toMin(a.start) - toMin(b.start));
+    const laneEnds = [];
+    items.forEach(s => {
+      let lane = laneEnds.findIndex(end => end <= toMin(s.start));
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
+      laneEnds[lane] = toMin(s.end);
+      s._lane = lane;
+    });
+    const lanes = Math.max(1, laneEnds.length);
+    const blocks = items.map(s => {
+      const top = (toMin(s.start) - startH * 60) / 60 * ROW_H;
+      const height = Math.max(26, (toMin(s.end) - toMin(s.start)) / 60 * ROW_H - 4);
+      const w = 100 / lanes;
+      const task = state.tasks.find(t => t.id === s.taskId);
+      const cat = CAT_COLORS[s.cat] ? s.cat : "main";
+      return `<div class="block cat-${cat}" style="top:${top + 2}px;height:${height}px;left:calc(${s._lane * w}% + 1px);width:calc(${w}% - 2px);background:${CAT_COLORS[cat]}">
+        <button class="x" title="Remove" onclick="delSch('${s.id}')">✕</button>
+        <b>${esc(s.title)}</b><small>${esc(s.start)} - ${esc(s.end)}${s.notes ? " · " + esc(s.notes) : ""}</small>${task ? `<small class="tk">${task.done ? "✔" : "🔗"} ${esc(task.title)}</small>` : ""}
+      </div>`;
+    }).join("");
+    html += `<div class="daycol ${d === todayIdx() ? "today" : ""}" style="height:${totalH}px">${hcells}${blocks}</div>`;
+  }
+  el.innerHTML = html;
+}
+function delSch(id) { state.schedules = state.schedules.filter(s => s.id !== id); save(); render(); }
+
+// Download the weekly timetable as a PNG image (drawn on a canvas, works offline)
+function downloadPNG() {
+  const list = state.schedules;
+  const numDays = list.some(s => s.day >= 5) ? 7 : 5;
+  let startH = 8, endH = 18;
+  if (list.length) {
+    startH = Math.min(8, Math.floor(Math.min(...list.map(s => toMin(s.start))) / 60));
+    endH = Math.max(18, Math.ceil(Math.max(...list.map(s => toMin(s.end))) / 60));
+  }
+  const S = 2, pad0 = 24, gap = 8, timeW = 130, hdrH = 56, rowH = 60, W = 1400, bannerH = 96;
+  const dayW = (W - pad0 * 2 - timeW - gap * numDays) / numDays;
+  const tableY = pad0 + bannerH + 20;
+  const bodyY = tableY + hdrH + gap;
+  const bodyH = (endH - startH) * rowH;
+  const legendY = bodyY + bodyH + 28;
+  const H = legendY + 40 + pad0;
+  const dayX = d => pad0 + timeW + gap + d * (dayW + gap);
+
+  const c = document.createElement("canvas");
+  c.width = W * S; c.height = H * S;
+  const ctx = c.getContext("2d");
+  ctx.scale(S, S);
+  const FONT = '"Noto Sans Thai","Segoe UI",system-ui,sans-serif';
+
+  const rr = (x, y, w, h, r) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  };
+  const fit = (t, maxW) => {
+    if (ctx.measureText(t).width <= maxW) return t;
+    while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+    return t + "…";
+  };
+  const text = (t, x, y, font, color, maxW) => {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(maxW ? fit(t, maxW) : t, x, y);
+  };
+
+  // page + banner
+  ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#0f172a"; rr(pad0, pad0, W - pad0 * 2, bannerH, 24); ctx.fill();
+  text("Weekly Schedule & Tasks", W / 2, pad0 + 36, `700 30px ${FONT}`, "#ffffff");
+  text("Classes, study sessions and to-dos in one place (Monday – Sunday)", W / 2, pad0 + 68, `400 16px ${FONT}`, "#94a3b8");
+
+  // headers
+  ctx.fillStyle = "#334155"; rr(pad0, tableY, timeW, hdrH, 12); ctx.fill();
+  text("Time", pad0 + timeW / 2, tableY + hdrH / 2, `700 16px ${FONT}`, "#ffffff");
+  for (let d = 0; d < numDays; d++) {
+    const [full, short, color] = DAYS[d], x = dayX(d);
+    ctx.fillStyle = color; rr(x, tableY, dayW, hdrH, 12); ctx.fill();
+    if (d === todayIdx()) { ctx.strokeStyle = color; ctx.lineWidth = 2; rr(x - 3, tableY - 3, dayW + 6, hdrH + 6, 14); ctx.stroke(); }
+    text(full, x + dayW / 2, tableY + 20, `700 15px ${FONT}`, "#ffffff");
+    text(`(${short})`, x + dayW / 2, tableY + 40, `700 15px ${FONT}`, "#ffffff");
+  }
+
+  // time column + empty cells
+  for (let h = startH; h < endH; h++) {
+    const y = bodyY + (h - startH) * rowH + 2;
+    ctx.fillStyle = "#f1f5f9"; ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 1;
+    rr(pad0, y, timeW, rowH - 4, 12); ctx.fill(); ctx.stroke();
+    text(`${pad(h)}:00 - ${pad(h + 1)}:00`, pad0 + timeW / 2, y + (rowH - 4) / 2, `700 14px ${FONT}`, "#334155");
+    for (let d = 0; d < numDays; d++) {
+      ctx.fillStyle = d === todayIdx() ? "#eff6ff" : "#ffffff"; ctx.strokeStyle = "#e2e8f0";
+      rr(dayX(d), y, dayW, rowH - 4, 12); ctx.fill(); ctx.stroke();
+      text("-", dayX(d) + dayW / 2, y + (rowH - 4) / 2, `400 13px ${FONT}`, "#cbd5e1");
+    }
+  }
+
+  // class blocks
+  for (let d = 0; d < numDays; d++) {
+    const items = list.filter(s => s.day === d).sort((a, b) => toMin(a.start) - toMin(b.start));
+    const laneEnds = [];
+    const lane = new Map();
+    items.forEach(s => {
+      let l = laneEnds.findIndex(end => end <= toMin(s.start));
+      if (l === -1) { l = laneEnds.length; laneEnds.push(0); }
+      laneEnds[l] = toMin(s.end); lane.set(s.id, l);
+    });
+    const lanes = Math.max(1, laneEnds.length);
+    items.forEach(s => {
+      const cat = CAT_COLORS[s.cat] ? s.cat : "main";
+      const top = bodyY + (toMin(s.start) - startH * 60) / 60 * rowH + 2;
+      const h = Math.max(26, (toMin(s.end) - toMin(s.start)) / 60 * rowH - 4);
+      const w = dayW / lanes, x = dayX(d) + lane.get(s.id) * w + 1, bw = w - 2;
+      ctx.fillStyle = CAT_COLORS[cat];
+      ctx.strokeStyle = cat === "break" ? "#cbd5e1" : "rgba(0,0,0,.18)";
+      rr(x, top, bw, h, 12); ctx.fill(); ctx.stroke();
+      const color = cat === "break" ? "#334155" : "#ffffff";
+      const sub = `${s.start} - ${s.end}${s.notes ? " · " + s.notes : ""}`;
+      const cx = x + bw / 2, cy = top + h / 2;
+      const task = state.tasks.find(t => t.id === s.taskId);
+      const taskLine = task ? `${task.done ? "✔" : "🔗"} ${task.title}` : "";
+      if (taskLine && h >= 64) {
+        text(s.title, cx, cy - 17, `700 14px ${FONT}`, color, bw - 12);
+        text(sub, cx, cy + 1, `400 12px ${FONT}`, color, bw - 12);
+        text(taskLine, cx, cy + 18, `600 12px ${FONT}`, color, bw - 12);
+      } else if (h >= 42) {
+        text(s.title, cx, cy - 9, `700 14px ${FONT}`, color, bw - 12);
+        text(sub, cx, cy + 10, `400 12px ${FONT}`, color, bw - 12);
+      } else {
+        text(`${s.title}  ${s.start}-${s.end}`, cx, cy, `700 12px ${FONT}`, color, bw - 12);
+      }
+    });
+  }
+
+  // legend
+  const legend = [["Main class", CAT_COLORS.main], ["Study / Project", CAT_COLORS.study],
+                  ["Special class", CAT_COLORS.special], ["Break / Meal", CAT_COLORS.break]];
+  let lx = pad0 + 10;
+  legend.forEach(([label, color]) => {
+    ctx.fillStyle = color; ctx.strokeStyle = "rgba(0,0,0,.12)";
+    rr(lx, legendY, 44, 24, 7); ctx.fill(); ctx.stroke();
+    ctx.font = `600 15px ${FONT}`; ctx.fillStyle = "#1e293b"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(label, lx + 56, legendY + 12);
+    lx += 56 + ctx.measureText(label).width + 40;
+  });
+
+  c.toBlob(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `weekly-schedule-${today()}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }, "image/png");
+}
+
+function render() { renderTasks(); renderTimetable(); }
+render();
+</script>
+</body>
+</html>

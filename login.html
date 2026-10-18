@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in – My Schedule</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="authwrap">
+  <header class="banner">
+    <h1>Weekly Schedule &amp; Tasks</h1>
+    <p>Log in or create an account to use the app</p>
+  </header>
+
+  <div class="card authcard">
+    <div class="authtabs">
+      <button type="button" id="tabLogin" class="active">Log in</button>
+      <button type="button" id="tabRegister">Create account</button>
+    </div>
+
+    <h2 id="authTitle"></h2>
+    <p class="hint" id="authHelp"></p>
+
+    <form id="authForm" class="one" autocomplete="on">
+      <div>
+        <label for="user">Username</label>
+        <input id="user" name="username" required autocomplete="username" autofocus minlength="3" maxlength="20">
+      </div>
+      <div>
+        <label for="pass">Password</label>
+        <input id="pass" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <div id="confirmBox" hidden>
+        <label for="pass2">Confirm password</label>
+        <input id="pass2" type="password" autocomplete="new-password">
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="showPass"> Show password</label>
+        <label class="check"><input type="checkbox" id="keep" checked> Keep me signed in</label>
+      </div>
+      <div id="authMsg" class="msg" role="alert" hidden></div>
+      <button class="primary" type="submit" id="authSubmit">Log in</button>
+    </form>
+  </div>
+  <p class="hint authnote">Your account and data are stored online, so you can log in from any device.</p>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

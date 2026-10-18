@@ -81,3 +81,30 @@ button.primary:hover { background: var(--slate); }
 .hint { font-size: .8rem; color: var(--muted); margin-top: 8px; }
 
 @media (max-width: 640px) { form, form.three { grid-template-columns: 1fr; } form .span2 { grid-column: auto; } }
+
+/* Login / create account */
+.banner { position: relative; }
+.userbar { position: absolute; top: 14px; right: 16px; display: flex; align-items: center; gap: 10px; font-size: .85rem; color: #cbd5e1; }
+button.ghost { background: transparent; color: #fff; border: 1px solid #475569; border-radius: 99px; padding: 5px 14px; cursor: pointer; font: inherit; font-weight: 600; }
+button.ghost:hover { background: #1e293b; }
+form.one { grid-template-columns: 1fr; }
+.authwrap { max-width: 460px; margin: 0 auto; padding: 24px 16px 60px; }
+.authcard h2 { margin: 14px 0 4px; }
+.authcard .hint { margin: 0 0 14px; }
+.authtabs { display: flex; gap: 6px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
+.authtabs button { flex: 1; border: 0; background: transparent; padding: 9px; border-radius: 9px; cursor: pointer; font: inherit; font-weight: 700; color: var(--muted); }
+.authtabs button.active { background: var(--navy); color: #fff; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; cursor: pointer; }
+label.check input { width: auto; }
+.msg { padding: 10px 12px; border-radius: 10px; font-size: .88rem; background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.authnote { text-align: center; }
+@media (max-width: 640px) { .userbar { position: static; justify-content: center; margin-top: 10px; } }
+
+/* Message at the bottom of the screen */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--navy); color: #fff;
+         padding: 10px 18px; border-radius: 12px; font-size: .9rem; box-shadow: 0 6px 20px rgba(15,23,42,.3); max-width: 90vw; z-index: 10; }
+.toast[hidden] { display: none; }
+
+[hidden] { display: none !important; }
+.loading { text-align: center; color: var(--muted); padding: 60px 16px; }
